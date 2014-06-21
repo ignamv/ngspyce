@@ -60,6 +60,19 @@ def cmd(command):
     """Send a commang to the ngspice engine"""
     spice.ngSpice_Command(command.encode('ascii'))
 
+# int ngSpice_Circ(char**)
+spice.ngSpice_Circ.argtypes = [POINTER(c_char_p)]
+
+def circ(netlist_lines):
+    """Send an array of netlist lines"""
+    # First line is ignored by the engine
+    netlist_lines.insert(0, '* First line')
+    netlist_lines = [line.encode('ascii') for line in netlist_lines]
+    # Add terminator
+    netlist_lines.append(None)
+    array = (c_char_p * len(netlist_lines))(*netlist_lines)
+    return spice.ngSpice_Circ(array)
+
 #struct ngcomplex {
 #    double cx_real;
 #    double cx_imag;
