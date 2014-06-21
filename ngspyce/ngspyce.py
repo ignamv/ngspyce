@@ -58,7 +58,7 @@ spice.ngSpice_Command.argtypes = [c_char_p]
 
 def cmd(command):
     """Send a commang to the ngspice engine"""
-    spice.ngSpice_Command(command)
+    spice.ngSpice_Command(command.encode('ascii'))
 
 #struct ngcomplex {
 #    double cx_real;
