@@ -3,6 +3,7 @@ from ctypes import CDLL, CFUNCTYPE, Structure, c_int, c_char_p, c_void_p, \
         c_bool, c_double, POINTER, c_short
 import numpy as np
 import logging
+import re
 
 logger = logging.getLogger('ngspice')
 logging.basicConfig(level=logging.WARNING)
@@ -63,12 +64,20 @@ def cmd(command):
 # int ngSpice_Circ(char**)
 spice.ngSpice_Circ.argtypes = [POINTER(c_char_p)]
 
+end_regex = re.compile('.end', flags = re.IGNORECASE)
+
 def circ(netlist_lines):
-    """Send an array of netlist lines"""
+    """Specify a netlist"""
+    # Accept an array of lines, or a multi-line string
+    if issubclass(type(netlist_lines), str):
+        netlist_lines = netlist_lines.split('\n')
     # First line is ignored by the engine
     netlist_lines.insert(0, '* First line')
     netlist_lines = [line.encode('ascii') for line in netlist_lines]
-    # Add terminator
+    # Add netlist end
+    if not any((end_regex.match(line) for line in netlist_lines)):
+        netlist_lines.append('.end')
+    # Add list terminator
     netlist_lines.append(None)
     array = (c_char_p * len(netlist_lines))(*netlist_lines)
     return spice.ngSpice_Circ(array)
