@@ -73,10 +73,10 @@ def circ(netlist_lines):
         netlist_lines = netlist_lines.split('\n')
     # First line is ignored by the engine
     netlist_lines.insert(0, '* First line')
-    netlist_lines = [line.encode('ascii') for line in netlist_lines]
     # Add netlist end
     if not any((end_regex.match(line) for line in netlist_lines)):
         netlist_lines.append('.end')
+    netlist_lines = [line.encode('ascii') for line in netlist_lines]
     # Add list terminator
     netlist_lines.append(None)
     array = (c_char_p * len(netlist_lines))(*netlist_lines)
