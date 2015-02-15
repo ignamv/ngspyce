@@ -210,18 +210,16 @@ def vector(name):
         raise RuntimeError('Vector {} not found'.format(name))
     vec = vec[0]
     if vec.v_flags & dvec_flags.vf_real:
-        array =  np.array(np.ctypeslib.as_array(vec.v_realdata,
-                                                shape=(vec.v_length,)),
-                          copy=True)
+        array = np.ctypeslib.as_array(vec.v_realdata, shape=(vec.v_length,))
     elif vec.v_flags & dvec_flags.vf_complex:
-        components = np.array(np.ctypeslib.as_array(vec.v_compdata,
-                                                    shape=(vec.v_length,2)),
-                              copy=True)
+        components = np.ctypeslib.as_array(vec.v_compdata, 
+                                           shape=(vec.v_length,2))
         array = np.ndarray(shape=(vec.v_length,), dtype=np.complex128,
                            buffer=components)
     else:
         raise RuntimeError('No valid data in vector')
     logger.debug('Fetched vector {} type {}'.format(name, vec.v_type))
+    array.setflags(write=False)
     return array
 
 #
