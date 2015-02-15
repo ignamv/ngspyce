@@ -1,2 +1,2 @@
 #
-from ngspyce import *
+from .ngspyce import *
