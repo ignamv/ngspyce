@@ -209,7 +209,9 @@ def vector(name):
     if not vec:
         raise RuntimeError('Vector {} not found'.format(name))
     vec = vec[0]
-    if vec.v_flags & dvec_flags.vf_real:
+    if vec.v_length == 0:
+        array = np.array([])
+    elif vec.v_flags & dvec_flags.vf_real:
         array = np.ctypeslib.as_array(vec.v_realdata, shape=(vec.v_length,))
     elif vec.v_flags & dvec_flags.vf_complex:
         components = np.ctypeslib.as_array(vec.v_compdata, 
@@ -249,3 +251,13 @@ class simulation_type(object):
     capacitance = 19
     charge = 20           
 
+def dc(*args):
+    """Sweep DC sources and return a multidimensional array. *args* is a
+    variable length argument, allowing for multiple *srcname*, *start*, *stop*,
+    *increment* groups."""
+    cmd('dc ' + ' '.join(str(arg) for arg in args))
+    src = args[0::4]
+    start = args[1::4]
+    stop = args[2::4]
+    incr = args[3::4]
+    sweeps = [sp.arange(start, stop, incr)]
