@@ -2,9 +2,9 @@ import ngspyce
 import numpy as np
 from matplotlib import pyplot as plt
 
-ngspyce.cmd(b'source quad.net')
+ngspyce.cmd('source quad.net')
 #trrandom(2 2m 0 10m 0)
-ngspyce.cmd(b'tran 1m 20m')
+ngspyce.cmd('tran 1m 20m')
 print('\n'.join(ngspyce.vectorNames()))
 vcos, vsin, time = ngspyce.vectors(['Vcos','Vsin','time']).values()
 #np.savetxt('vcos.txt', vcos)
