@@ -5,9 +5,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Load netlist
-ngspyce.cmd(b'source quad.net')
+ngspyce.cmd('source quad.net')
 # Simulate 10 ms
-ngspyce.cmd(b'tran 12n 10m 1n')
+ngspyce.cmd('tran 12n 10m 1n')
 
 # Read results
 time, vsin, vcos = map(ngspyce.vector, ['time','Vsin','Vcos'])
@@ -20,3 +20,4 @@ plt.xlabel('Time [ms]')
 plt.ylabel('Voltage [V]')
 plt.savefig('quad.png')
 plt.show()
+

@@ -6,9 +6,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Load netlist
-ngspyce.cmd(b'source npn.net')
+ngspyce.cmd('source npn.net')
 # Sweep both base and collector current
-ngspyce.cmd(b'dc vcc 0 2 .05 vbb .7 1.2 .1')
+ngspyce.cmd('dc vcc 0 2 .05 vbb .7 1.2 .1')
 
 # Load simulation results into numpy arrays
 vb, vc, Ivcc = map(ngspyce.vector, ['Vb', 'Vc', 'I(Vcc)'])
