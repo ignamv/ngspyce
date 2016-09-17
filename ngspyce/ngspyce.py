@@ -1,8 +1,9 @@
 
 from ctypes import CDLL, CFUNCTYPE, Structure, c_int, c_char_p, c_void_p, \
-        c_bool, c_double, POINTER, c_short
+        c_bool, c_double, POINTER, pointer, cast, c_short, py_object
 import numpy as np
 import logging
+import itertools
 import re
 
 logger = logging.getLogger(__name__)
@@ -11,13 +12,21 @@ logging.basicConfig(level=logging.WARNING)
 # libngspice source code is listed before the relevant ctype structs
 spice = CDLL('libngspice.so')
 
+class Userdata(object):
+    captured_output = []
+userdata = Userdata()
+
 @CFUNCTYPE(c_int, c_char_p, c_int, c_void_p)
 def printfcn(output, id, ret):
     """Callback for libngspice to print a message"""
-    if output.startswith(b'stderr'):
-        logger.error(output[7:].decode('ascii'))
+    #print(cast(ret, POINTER(py_object)).contents)
+    udata = cast(ret, POINTER(py_object)).contents.value
+    #print(udata)
+    prefix, _, content = output.decode('ascii').partition(' ')
+    if prefix == 'stderr':
+        logger.error(content)
     else:
-        logger.info(output[7:].decode('ascii'))
+        udata.captured_output.append(content)
     return 0
 
 @CFUNCTYPE(c_int, c_char_p, c_int, c_void_p)
