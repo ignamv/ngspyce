@@ -5,7 +5,7 @@ import numpy as np
 import logging
 import re
 
-logger = logging.getLogger('ngspice')
+logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING)
 
 # libngspice source code is listed before the relevant ctype structs
