@@ -1,3 +1,6 @@
 __pycache__/
 *.pyc
-
+*.swp
+*.swo
+*~
+*.egg-info
