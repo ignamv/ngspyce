@@ -281,13 +281,92 @@ class simulation_type(object):
     capacitance = 19
     charge = 20           
 
-def dc(*args):
-    """Sweep DC sources and return a multidimensional array. *args* is a
-    variable length argument, allowing for multiple *srcname*, *start*, *stop*,
-    *increment* groups."""
-    cmd('dc ' + ' '.join(str(arg) for arg in args))
-    src = args[0::4]
-    start = args[1::4]
-    stop = args[2::4]
-    incr = args[3::4]
-    sweeps = [sp.arange(start, stop, incr)]
+def try_float(s):
+    '''Parse s as float if possible, otherwise return s'''
+    try:
+        return float(s)
+    except ValueError:
+        try:
+            return float(s.replace(',', '.'))
+        except ValueError:
+            return s
+
+def model_parameters(device):
+    '''Return dict with model parameters for device'''
+    lines = cmd('showmod ' + device)
+    ret = dict(description=lines.pop(0))
+    ret.update({parts[0]: try_float(parts[1])
+                for parts in map(str.split, lines)})
+    return ret
+
+def alter_model(device, **params):
+    for k,v in params.items():
+        cmd('altermod {} {} = {:.6e}'.format(device, k, v))
+
+def ac(mode, npoints, fstart, fstop):
+    '''Perform small-signal AC analysis
+
+    Examples
+    ========
+    Sweep from 1kHz to 10MHz with 3 points per decade
+
+    >>> ac('dec', 3, 1e3, 10e6)
+
+    Sweep from 0 to 20kHz in 21 linearly spaced points
+
+    >>> ac('lin', 21, 0, 20e3)
+    '''
+    modes = ('dec', 'lin', 'oct')
+    if mode.lower() not in modes:
+        raise Exception(mode, 'not a valid AC sweep mode', modes)
+    if fstop < fstart:
+        raise Exception('Start frequency', fstart,
+                        'greater than stop frequency', fstop)
+    cmd('ac {} {} {} {}'.format(mode, npoints, fstart, fstop))
+    return vectors()
+
+def dc(*sweeps):
+    '''Analyze DC transfer function
+
+    sweeps is one or more sequences of (src, start, stop, increment)
+    src can be an independent voltage or current source, a resistor, or "TEMP".
+
+    Example
+    =======
+    Sweep Vgs from 0 to 5V in 0.1V steps while stepping temperature
+
+    >>> dc('vgs', 0, 5, .1, 'temp', -20, 80, 10)
+    '''
+    cmd('dc ' + ' '.join(map(str, sweeps)))
+    return vectors()
+
+def operating_point():
+    '''Analyze DC operating point'''
+    cmd('op')
+    return vectors()
+
+def save(vector):
+    cmd('save ' + vector)
+
+def destroy(plotname='all'):
+    '''Erase plot from memory'''
+    cmd('destroy ' + plotname)
+
+def decibel(x):
+    return 10. * np.log10(np.abs(x))
+
+def alter(device, **parameters):
+    '''Alter device parameters
+
+    Examples
+    ========
+    >>> alter('R1', resistance=200)
+    >>> alter('vin', ac=2, dc=3)
+    '''
+    for k,v in parameters.items():
+        if not isinstance(v, (list, tuple)):
+            v = str(v)
+        else:
+            v = '[ ' + ' '.join(v) + ' ]'
+        cmd('alter {} {} = {}'.format(device.lower(), k, v))
+
