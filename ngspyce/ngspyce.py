@@ -11,22 +11,17 @@ logging.basicConfig(level=logging.WARNING)
 
 # libngspice source code is listed before the relevant ctype structs
 spice = CDLL('libngspice.so')
-
-class Userdata(object):
-    captured_output = []
-userdata = Userdata()
+captured_output = []
 
 @CFUNCTYPE(c_int, c_char_p, c_int, c_void_p)
 def printfcn(output, id, ret):
     """Callback for libngspice to print a message"""
-    #print(cast(ret, POINTER(py_object)).contents)
-    udata = cast(ret, POINTER(py_object)).contents.value
-    #print(udata)
+    global captured_output
     prefix, _, content = output.decode('ascii').partition(' ')
     if prefix == 'stderr':
         logger.error(content)
     else:
-        udata.captured_output.append(content)
+        captured_output.append(content)
     return 0
 
 @CFUNCTYPE(c_int, c_char_p, c_int, c_void_p)
@@ -35,7 +30,14 @@ def statfcn(status, id, ret):
     logger.debug(status.decode('ascii'))
     return 0
 
-spice.ngSpice_Init(printfcn, statfcn, None, None, None, None, None)
+@CFUNCTYPE(c_int, c_int, c_bool, c_bool, c_int, c_void_p)
+def controlled_exit(exit_status, immediate_unloading, requested_exit,
+                    libngspice_id, ret):
+    logger.debug('ControlledExit', dict(exit_status=exit_status,
+                                      immediate_unloading=immediate_unloading,
+                                      requested_exit=requested_exit,
+                                      libngspice_id=libngspice_id,
+                                      ret=ret))
 
 # typedef struct vecvalues {
     # char* name; /* name of a specific vector */
@@ -62,13 +64,29 @@ class vecvaluesall(Structure):
         ('veccount', c_int),
         ('vecindex', c_int),
         ('vecsa', POINTER(POINTER(vecvalues)))]
+@CFUNCTYPE(c_int, POINTER(vecvaluesall), c_int, c_int, c_void_p)
+def send_data(vecvaluesall, num_structs, libngspice_id, ret):
+    logger.debug('SendData', dict(vecvaluesall=vecvaluesall,
+                                  num_structs=num_structs,
+                                  libngspice_id=libngspice_id,
+                                  ret=ret))
+
+spice.ngSpice_Init(printfcn, statfcn, controlled_exit, send_data, None, None, 
+                   None)
 
 # int  ngSpice_Command(char* command);
 spice.ngSpice_Command.argtypes = [c_char_p]
 
 def cmd(command):
     """Send a commang to the ngspice engine"""
+    max_length = 1023
+    if len(command) > max_length:
+        raise Exception('Command length', len(command), 'greater than',
+                        max_length)
+    captured_output.clear()
     spice.ngSpice_Command(command.encode('ascii'))
+    logger.debug('Command %s returned %s', command, captured_output)
+    return captured_output
 
 # int ngSpice_Circ(char**)
 spice.ngSpice_Circ.argtypes = [POINTER(c_char_p)]
