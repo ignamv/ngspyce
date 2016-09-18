@@ -3,8 +3,6 @@ from ctypes import CDLL, CFUNCTYPE, Structure, c_int, c_char_p, c_void_p, \
         c_bool, c_double, POINTER, pointer, cast, c_short, py_object
 import numpy as np
 import logging
-import itertools
-import re
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING)
