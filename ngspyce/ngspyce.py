@@ -26,7 +26,7 @@ def printfcn(output, id, ret):
 
 @CFUNCTYPE(c_int, c_char_p, c_int, c_void_p)
 def statfcn(status, id, ret): 
-    """Callback for libngspice to report the current status"""
+    """Callback for libngspice to report simulation status like 'tran 5%'"""
     logger.debug(status.decode('ascii'))
     return 0
 
@@ -94,8 +94,10 @@ spice.ngSpice_Circ.argtypes = [POINTER(c_char_p)]
 end_regex = re.compile('.end', flags = re.IGNORECASE)
 
 def circ(netlist_lines):
-    """Specify a netlist"""
-    # Accept an array of lines, or a multi-line string
+    """Specify a netlist
+    
+    Accepts an array of lines, or a multi-line string
+    """
     if issubclass(type(netlist_lines), str):
         netlist_lines = netlist_lines.split('\n')
     # First line is ignored by the engine
@@ -230,8 +232,12 @@ def vectors(names=None):
         names = vectorNames(plot)
     return dict(zip(names, map(vector, names)))
 
-def vector(name):
-    """Return a numpy.ndarray with the specified vector"""
+def vector(name, plot=None):
+    """Return a numpy.ndarray with the specified vector
+    
+    Uses the current plot by default."""
+    if plot is not None:
+        name = plot + '.' + name
     vec = spice.ngGet_Vec_Info(name.encode('ascii'))
     if not vec:
         raise RuntimeError('Vector {} not found'.format(name))
