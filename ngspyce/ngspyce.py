@@ -91,8 +91,6 @@ def cmd(command):
 # int ngSpice_Circ(char**)
 spice.ngSpice_Circ.argtypes = [POINTER(c_char_p)]
 
-end_regex = re.compile('.end', flags = re.IGNORECASE)
-
 def circ(netlist_lines):
     """Specify a netlist
     
@@ -100,12 +98,11 @@ def circ(netlist_lines):
     """
     if issubclass(type(netlist_lines), str):
         netlist_lines = netlist_lines.split('\n')
-    # First line is ignored by the engine
-    netlist_lines.insert(0, '* First line')
-    # Add netlist end
-    if not any((end_regex.match(line) for line in netlist_lines)):
-        netlist_lines.append('.end')
     netlist_lines = [line.encode('ascii') for line in netlist_lines]
+    # First line is ignored by the engine
+    netlist_lines.insert(0, b'* First line')
+    # Add netlist end
+    netlist_lines.append(b'.end')
     # Add list terminator
     netlist_lines.append(None)
     array = (c_char_p * len(netlist_lines))(*netlist_lines)
