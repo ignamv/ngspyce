@@ -368,3 +368,9 @@ def alter(device, **parameters):
             v = '[ ' + ' '.join(v) + ' ]'
         cmd('alter {} {} = {}'.format(device.lower(), k, v))
 
+from sys import float_info
+def linear_sweep(start, stop, step):
+    '''Voltages used in a dc transfer curve analysis linear sweep
+    
+    Matches ngspice voltages up to 10 significant digits'''
+    return np.arange(start, stop * (1 + float_info.epsilon), step)

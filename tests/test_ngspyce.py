@@ -90,3 +90,34 @@ class TestCommands(NgspiceTest):
 class TestHelpers(unittest.TestCase):
     def test_decibel(self):
         self.assertEqual(list(ns.decibel([1, 10, 100])), [0, 10, 20])
+
+class TestLinearSweep(unittest.TestCase):
+    def setUp(self):
+        ns.circ('va a 0 dc 0')
+
+    def assertEqualNdarray(self, xs1, xs2):
+        for x1, x2 in zip(xs1.flat, xs2.flat):
+            avg = .5 * (x1 + x2)
+            if avg == 0:
+                self.assertEqual(x1, x2)
+            else:
+                self.assertAlmostEqual(x1 / avg, x2 / avg, places=10)
+
+    def _test_sweep(self, *args):
+        ns.dc('va', *args)
+        self.assertEqualNdarray(ns.vector('a')
+                               ,ns.linear_sweep(*args))
+
+    def test_linearsweep(self):
+        testcases = [
+             (0, 10, 1)
+            ,(0, -10, -1)
+            ,(0, 10, .1)
+            ,(1.23, 4.56, 0.789)
+            ,(1.23, -4.56, 0.789)
+            ,(1.23, 4.56, -0.789)
+        ]
+        for sweep in testcases:
+            with self.subTest(sweep=sweep):
+                self._test_sweep(*sweep)
+
