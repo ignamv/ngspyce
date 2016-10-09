@@ -323,20 +323,36 @@ def ac(mode, npoints, fstart, fstop):
     cmd('ac {} {} {} {}'.format(mode, npoints, fstart, fstop))
     return vectors()
 
+def group(iterable, grouplength):
+    return zip(*(iterable[ii::grouplength]
+                 for ii in range(grouplength)))
+    
 def dc(*sweeps):
-    '''Analyze DC transfer function
+    '''Analyze DC transfer function, return vectors with one axis per sweep
 
     sweeps is one or more sequences of (src, start, stop, increment)
     src can be an independent voltage or current source, a resistor, or "TEMP".
 
+    Returned vectors are reshaped so each axis corresponds to one sweep.
+
     Example
     =======
-    Sweep Vgs from 0 to 5V in 0.1V steps while stepping temperature
-
-    >>> dc('vgs', 0, 5, .1, 'temp', -20, 80, 10)
+    >>> dc('va', 0, 1, 1, 'vb', 0, 2, 2)
+    {'a': array([[ 0.,  0.], [ 1.,  1.]]), 
+     'b': array([[ 0.,  2.], [ 0.,  2.]]), ...}
     '''
+    # TODO: support more than two sweeps
     cmd('dc ' + ' '.join(map(str, sweeps)))
-    return vectors()
+    sweepvalues = [linear_sweep(*sweep[1:])
+        for sweep in group(sweeps, 4)]
+    sweeplengths = tuple(map(len, sweepvalues))
+    ret = {k: v.reshape(sweeplengths, order='F')
+           for k,v in vectors().items()}
+    for ii, (name, values) in enumerate(zip(sweeps[::4], sweepvalues)):
+        shape = [length if ii == jj else 1
+                    for jj, length in enumerate(sweeplengths)]
+        ret[name] = values.reshape(shape, order='F')
+    return ret
 
 def operating_point():
     '''Analyze DC operating point'''
@@ -370,7 +386,15 @@ def alter(device, **parameters):
 
 from sys import float_info
 def linear_sweep(start, stop, step):
-    '''Voltages used in a dc transfer curve analysis linear sweep
-    
-    Matches ngspice voltages up to 10 significant digits'''
-    return np.arange(start, stop * (1 + float_info.epsilon), step)
+    '''Voltages used in a dc transfer curve analysis linear sweep'''
+    if (start > stop and step > 0) or (start < stop and step < 0):
+        raise Exception("Can't sweep from", start, 'to', stop, 'with step',
+                        step)
+    ret = []
+    nextval = start
+    while True:
+        if np.sign(step) * nextval - np.sign(step) * stop >= ( 
+                float_info.epsilon * 1e3):
+            return np.array(ret)
+        ret.append(nextval)
+        nextval = nextval + step

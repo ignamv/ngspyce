@@ -96,12 +96,9 @@ class TestLinearSweep(unittest.TestCase):
         ns.circ('va a 0 dc 0')
 
     def assertEqualNdarray(self, xs1, xs2):
+        self.assertEqual(xs1.shape, xs2.shape)
         for x1, x2 in zip(xs1.flat, xs2.flat):
-            avg = .5 * (x1 + x2)
-            if avg == 0:
-                self.assertEqual(x1, x2)
-            else:
-                self.assertAlmostEqual(x1 / avg, x2 / avg, places=10)
+            self.assertEqual(x1, x2)
 
     def _test_sweep(self, *args):
         ns.dc('va', *args)
@@ -112,10 +109,9 @@ class TestLinearSweep(unittest.TestCase):
         testcases = [
              (0, 10, 1)
             ,(0, -10, -1)
+            #,(.3, .3, 0)
             ,(0, 10, .1)
             ,(1.23, 4.56, 0.789)
-            ,(1.23, -4.56, 0.789)
-            ,(1.23, 4.56, -0.789)
         ]
         for sweep in testcases:
             with self.subTest(sweep=sweep):
