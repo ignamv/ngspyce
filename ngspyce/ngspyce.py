@@ -4,6 +4,26 @@ from ctypes import CDLL, CFUNCTYPE, Structure, c_int, c_char_p, c_void_p, \
 import numpy as np
 import logging
 
+__all__ = [
+     'cmd'
+    ,'circ'
+    ,'plots'
+    ,'vectorNames'
+    ,'vectors'
+    ,'vector'
+    ,'try_float'
+    ,'model_parameters'
+    ,'alter_model'
+    ,'ac'
+    ,'dc'
+    ,'operating_point'
+    ,'save'
+    ,'destroy'
+    ,'decibel'
+    ,'alter'
+    ,'linear_sweep'
+]
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING)
 
