@@ -309,9 +309,18 @@ def try_float(s):
         except ValueError:
             return s
 
-def model_parameters(device):
-    '''Return dict with model parameters for device'''
-    lines = cmd('showmod ' + device)
+def model_parameters(device=None, model=None):
+    '''Return dict with model parameters for device or model'''
+    if device is None:
+        if model is not None:
+            lines = cmd('showmod #' + model.lower())
+        else:
+            raise Exception('Either device or model must be specified')
+    else:
+        if model is None:
+            lines = cmd('showmod ' + device.lower())
+        else:
+            raise Exception('Only specify one of device, model')
     ret = dict(description=lines.pop(0))
     ret.update({parts[0]: try_float(parts[1])
                 for parts in map(str.split, lines)})
