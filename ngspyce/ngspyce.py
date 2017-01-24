@@ -632,7 +632,7 @@ def alter(device, **parameters):
             v = '[ ' + ' '.join(v) + ' ]'
         cmd('alter {} {} = {}'.format(device.lower(), k, v))
 
-from sys import float_info
+
 def linear_sweep(start, stop, step):
     """
     Voltages used in a dc transfer curve analysis linear sweep
@@ -644,7 +644,7 @@ def linear_sweep(start, stop, step):
     nextval = start
     while True:
         if np.sign(step) * nextval - np.sign(step) * stop >= (
-                float_info.epsilon * 1e3):
+                np.finfo(float).eps * 1e3):
             return np.array(ret)
         ret.append(nextval)
         nextval = nextval + step
