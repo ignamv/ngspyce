@@ -3,6 +3,8 @@ from ctypes import CDLL, CFUNCTYPE, Structure, c_int, c_char_p, c_void_p, \
         c_bool, c_double, POINTER, pointer, cast, c_short, py_object
 import numpy as np
 import logging
+import os
+import platform
 
 __all__ = [
      'cmd'
@@ -28,7 +30,36 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.WARNING)
 
 # libngspice source code is listed before the relevant ctype structs
-spice = CDLL('libngspice.so')
+if os.name == 'nt':  # Windows
+    # http://stackoverflow.com/a/13277363
+    curr_dir_before = os.getcwd()
+
+    drive = os.getenv("SystemDrive") or 'C:'
+
+    # Python and DLL must both be same number of bits
+    if platform.architecture()[0] == '64bit':
+        spice_path = os.path.join(drive, os.sep, 'Spice64')
+    elif platform.architecture()[0] == '32bit':
+        spice_path = os.path.join(drive, os.sep, 'Spice')
+    else:
+        raise RuntimeError("Couldn't determine if Python is 32-bit or 64-bit")
+
+    """
+    https://sourceforge.net/p/ngspice/discussion/133842/thread/1cece652/#4e32/5ab8/9027
+    On Windows, when environment variable SPICE_LIB_DIR is empty, ngspice
+    looks in `C:\Spice64\share\ngspice\scripts`.  If the variable is not empty
+    it tries `%SPICE_LIB_DIR%\scripts\spinit`
+    """
+
+    if 'SPICE_LIB_DIR' not in os.environ:
+        os.environ['SPICE_LIB_DIR'] = os.path.join(spice_path, 'share',
+                                                   'ngspice')
+    os.chdir(os.path.join(spice_path, 'bin_dll'))
+    spice = CDLL('ngspice')
+    os.chdir(curr_dir_before)
+else:  # Linux, etc.
+    spice = CDLL('libngspice.so')
+
 captured_output = []
 
 @CFUNCTYPE(c_int, c_char_p, c_int, c_void_p)
