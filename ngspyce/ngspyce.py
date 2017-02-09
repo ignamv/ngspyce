@@ -144,8 +144,8 @@ def cmd(command):
     """
     max_length = 1023
     if len(command) > max_length:
-        raise Exception('Command length', len(command), 'greater than',
-                        max_length)
+        raise ValueError('Command length', len(command), 'greater than',
+                         max_length)
     captured_output.clear()
     spice.ngSpice_Command(command.encode('ascii'))
     logger.debug('Command %s returned %s', command, captured_output)
@@ -381,12 +381,12 @@ def model_parameters(device=None, model=None):
         if model is not None:
             lines = cmd('showmod #' + model.lower())
         else:
-            raise Exception('Either device or model must be specified')
+            raise ValueError('Either device or model must be specified')
     else:
         if model is None:
             lines = cmd('showmod ' + device.lower())
         else:
-            raise Exception('Only specify one of device, model')
+            raise ValueError('Only specify one of device, model')
     ret = dict(description=lines.pop(0))
     ret.update({parts[0]: try_float(parts[1])
                 for parts in map(str.split, lines)})
@@ -414,9 +414,10 @@ def ac(mode, npoints, fstart, fstop):
     """
     modes = ('dec', 'lin', 'oct')
     if mode.lower() not in modes:
-        raise Exception(mode, 'not a valid AC sweep mode', modes)
+        raise ValueError("'{}' is not a valid AC sweep "
+                         "mode: {}".format(mode, modes))
     if fstop < fstart:
-        raise Exception('Start frequency', fstart,
+        raise ValueError('Start frequency', fstart,
                         'greater than stop frequency', fstop)
     cmd('ac {} {} {} {}'.format(mode, npoints, fstart, fstop))
     return vectors()
@@ -501,12 +502,12 @@ def linear_sweep(start, stop, step):
     Voltages used in a dc transfer curve analysis linear sweep
     """
     if (start > stop and step > 0) or (start < stop and step < 0):
-        raise Exception("Can't sweep from", start, 'to', stop, 'with step',
-                        step)
+        raise ValueError("Can't sweep from", start, 'to', stop, 'with step',
+                         step)
     ret = []
     nextval = start
     while True:
-        if np.sign(step) * nextval - np.sign(step) * stop >= ( 
+        if np.sign(step) * nextval - np.sign(step) * stop >= (
                 float_info.epsilon * 1e3):
             return np.array(ret)
         ret.append(nextval)
