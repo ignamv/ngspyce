@@ -55,9 +55,14 @@ class TestBasicCircuits(NgspiceTest):
 
 
 class TestCommands(NgspiceTest):
-    def test_print(self):
+    def test_cmd(self):
         self.assertEqual(ns.cmd('print planck'),
                          ['planck = 6.626200e-34'])
+        self.assertEqual(ns.cmd('print' + ' '*200 + 'kelvin'),
+                         ['kelvin = -2.73150e+02'])
+
+        # Command too long
+        self.assertRaises(ValueError, ns.cmd, 'print' + ' '*2000 + 'kelvin')
 
     def test_plots(self):
         ns.circ('va a 0 dc 1')
@@ -89,6 +94,27 @@ class TestCommands(NgspiceTest):
         ns.alter_model('r', res=4)
         ns.operating_point()
         self.assertEqual(ns.vector('@r[resistance]'), 4)
+
+    def test_model_parameters(self):
+        ns.circ(['r n 0 rmodel', '.model rmodel R res = 3'])
+        self.assertEqual(ns.model_parameters(model='rmodel')['r'], 3)
+        self.assertEqual(ns.model_parameters(device='r')['r'], 3)
+
+        # Must specify device or model, and not both
+        self.assertRaises(ValueError, ns.model_parameters)
+        self.assertRaises(ValueError, ns.model_parameters, model='rmodel',
+                          device='r')
+
+    def test_ac(self):
+        ns.circ(['va a 0 ac 1 dc 0', 'c a 0 1'])
+        results = ns.ac('lin', 1, 1, 1)
+        self.assertEqual(results.keys(),  {'a', 'va#branch', 'frequency'})
+
+        # Invalid mode
+        self.assertRaises(ValueError, ns.ac, 'foo', 1, 2, 3)
+
+        # fstart > fstop
+        self.assertRaises(ValueError, ns.ac, 'lin', 2, 3, 2)
 
 
 class TestHelpers(unittest.TestCase):
@@ -122,3 +148,10 @@ class TestLinearSweep(unittest.TestCase):
             with self.subTest(sweep=sweep):
                 self._test_sweep(*sweep)
 
+        # Invalid sweeps
+        self.assertRaises(ValueError, ns.linear_sweep, 9, 1, 1)
+        self.assertRaises(ValueError, ns.linear_sweep, 1, 9, -1)
+
+
+if __name__ == '__main__':
+    unittest.main()
