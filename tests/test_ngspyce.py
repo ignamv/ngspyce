@@ -21,6 +21,34 @@ class NgspiceTest(unittest.TestCase):
         self.assertEqualDictOfArray(ns.vectors(), vectors)
 
 
+class TestPlatform(NgspiceTest):
+    # Test that spinit can be found and is loading default codemodels
+    # TODO: Should these just print warnings or actually fail the test?
+    def test_spice2poly_cm(self):
+        self.assertTrue(any([line.startswith('spice2poly') for line in
+                             ns.cmd('devhelp')[1:]]))
+
+    def test_analog_cm(self):
+        self.assertTrue(any([line.startswith('climit') for line in
+                             ns.cmd('devhelp')[1:]]))
+
+    def test_digital_cm(self):
+        self.assertTrue(any([line.startswith('adc_bridge') for line in
+                             ns.cmd('devhelp')[1:]]))
+
+    def test_table_cm(self):
+        self.assertTrue(any([line.startswith('table2d') for line in
+                             ns.cmd('devhelp')[1:]]))
+
+    def test_xtradev_cm(self):
+        self.assertTrue(any([line.startswith('aswitch') for line in
+                             ns.cmd('devhelp')[1:]]))
+
+    def test_xtraevt_cm(self):
+        self.assertTrue(any([line.startswith('d_to_real') for line in
+                             ns.cmd('devhelp')[1:]]))
+
+
 class TestBasicCircuits(NgspiceTest):
     def test_vsource(self):
         ns.circ('va a 0 dc 1')
