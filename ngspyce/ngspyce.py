@@ -141,6 +141,35 @@ spice.ngSpice_Command.argtypes = [c_char_p]
 def cmd(command):
     """
     Send a command to the ngspice engine
+
+    Parameters
+    ----------
+    command : str
+        An ngspice command
+
+    Returns
+    -------
+    success : list of str
+        A list of lines of the captured output
+
+    Examples
+    --------
+    Print all default variables
+
+    >>> cmd('print all')
+    ['false = 0.000000e+00',
+     'true = 1.000000e+00',
+     'boltz = 1.380620e-23',
+     'c = 2.997925e+08',
+     'e = 2.718282e+00',
+     'echarge = 1.602190e-19',
+     'i = 0.000000e+00,1.000000e+00',
+     'kelvin = -2.73150e+02',
+     'no = 0.000000e+00',
+     'pi = 3.141593e+00',
+     'planck = 6.626200e-34',
+     'yes = 1.000000e+00']
+
     """
     max_length = 1023
     if len(command) > max_length:
@@ -157,7 +186,33 @@ def circ(netlist_lines):
     """
     Specify a netlist
 
-    Accepts an array of lines, or a multi-line string
+    Parameters
+    ----------
+    netlist_lines : str or sequence of str
+        Lines of the netlist, either as a sequence, or a single multi-line
+        string.  Indentation and white space doesn't matter.  (Unlike a
+        netlist file, the first line doesn't need to be a comment, and you
+        don't need to provide the `.end`.)
+
+    Returns
+    -------
+    success : int
+        Returns a `1` upon error, otherwise `0`.
+
+    Examples
+    --------
+    Using a sequence of lines:
+
+    >>> circ(['va a 0 dc 1',
+    ...       'r a 0 2'])
+    0
+
+    Using a single string:
+
+    >>> circ('''va a 0 dc 1
+    ...         r a 0 2''')
+    0
+
     """
     if issubclass(type(netlist_lines), str):
         netlist_lines = netlist_lines.split('\n')
@@ -180,6 +235,27 @@ spice.ngSpice_AllPlots.restype = POINTER(c_char_p)
 def plots():
     """
     List available plots (result sets)
+
+    Each plot is a collection of vector results
+
+    Returns
+    -------
+    plots : list of str
+        List of the plot names available
+
+    Examples
+    --------
+    Get list of plots:
+
+    >>> plots()
+    ['ac1', 'dc1', 'const']
+
+    Get lists of vectors available in different plots:
+
+    >>> vectors(plot='const').keys()
+    dict_keys(['echarge', 'e', 'TRUE', 'FALSE', 'no', 'i', ... 'c', 'boltz'])
+    >>> vectors(plot='ac1').keys()
+    dict_keys(['V(1)', 'vout', 'v1#branch', 'frequency'])
     """
     ret = []
     plotlist = spice.ngSpice_AllPlots()
@@ -297,7 +373,25 @@ def vectors(names=None):
     """
     Return a dictionary with the specified vectors
 
-    If `names` is None, return all available vectors
+    Parameters
+    ----------
+    names : iterable of strings
+        Names of vectors to retrieve.  If `names` is None, return all
+        available vectors
+
+    Returns
+    -------
+    vectors : dict
+        Dictionary of vectors.  Keys are vector names and values are Numpy
+        arrays containing the data.
+
+    Examples
+    --------
+    Do an AC sweep and then retrieve the frequency axis and output voltage
+
+    >>> ac('dec', 3, 1e3, 10e6)
+    >>> ac_results = vectors(['frequency', 'vout'])
+
     """
     if names is None:
         plot = spice.ngSpice_CurPlot()
@@ -402,15 +496,38 @@ def ac(mode, npoints, fstart, fstop):
     """
     Perform small-signal AC analysis
 
+    Parameters
+    ----------
+    mode : {'lin', 'dec', oct'}
+        Frequency axis spacing: linear, decade, or octave.
+    npoints : int
+        If mode is 'lin', this is the total number of points for the sweep.
+        Otherwise, this is the number of points per decade or per octave.
+    fstart : float or str
+        Starting frequency.
+    fstop : float or str
+        Final frequency.
+
+    Returns
+    -------
+    results : dict
+        Dictionary of test results.  Frequency points are in
+        ``results['frequency']``, with corresponding voltages and currents
+        under their own key names, such as ``results['vout']``
+
     Examples
-    ========
-    Sweep from 1kHz to 10 MHz with 3 points per decade
+    --------
+    Sweep from 1 kHz to 10 MHz with 3 points per decade
 
-    >>> ac('dec', 3, 1e3, 10e6)
+    >>> results = ac('dec', 3, 1e3, 10e6)
+    >>> len(results['frequency'])
+    13
 
-    Sweep from 0 to 20 kHz in 21 linearly spaced points
+    Sweep from 20 to 20 kHz in 21 linearly spaced points
 
-    >>> ac('lin', 21, 0, 20e3)
+    >>> results = ac('lin', 21, 20, 20e3)
+    >>> len(results['frequency'])
+    21
     """
     modes = ('dec', 'lin', 'oct')
     if mode.lower() not in modes:
@@ -437,8 +554,8 @@ def dc(*sweeps):
 
     Returned vectors are reshaped so each axis corresponds to one sweep.
 
-    Example
-    =======
+    Examples
+    --------
     >>> dc('va', 0, 1, 1, 'vb', 0, 2, 2)
     {'a': array([[ 0.,  0.], [ 1.,  1.]]),
      'b': array([[ 0.,  2.], [ 0.,  2.]]), ...}
@@ -485,7 +602,7 @@ def alter(device, **parameters):
     Alter device parameters
 
     Examples
-    ========
+    --------
     >>> alter('R1', resistance=200)
     >>> alter('vin', ac=2, dc=3)
     """
