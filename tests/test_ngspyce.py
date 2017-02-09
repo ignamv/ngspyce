@@ -92,6 +92,10 @@ class TestCommands(NgspiceTest):
         # Command too long
         self.assertRaises(ValueError, ns.cmd, 'print' + ' '*2000 + 'kelvin')
 
+    def test_source(self):
+        ns.source('../examples/npn/npn.net')
+        self.assertEqual(ns.model_parameters(model='QBC337AP')['bf'], 175)
+
     def test_plots(self):
         ns.circ('va a 0 dc 1')
         for ii in range(3):

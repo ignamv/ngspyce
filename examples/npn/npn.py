@@ -6,7 +6,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Load netlist
-ngspyce.cmd('source npn.net')
+ngspyce.source('npn.net')
+
 # Sweep both base and collector current
 ngspyce.cmd('dc vcc 0 2 .05 vbb .7 1.2 .1')
 

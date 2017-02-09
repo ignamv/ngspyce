@@ -2,7 +2,7 @@ import ngspyce
 import numpy as np
 from matplotlib import pyplot as plt
 
-ngspyce.cmd('source quad.net')
+ngspyce.source('quad.net')
 #trrandom(2 2m 0 10m 0)
 ngspyce.cmd('tran 1m 20m')
 print('\n'.join(ngspyce.vector_names()))

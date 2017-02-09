@@ -5,8 +5,9 @@ import ngspyce
 from matplotlib import pyplot as plt
 import numpy as np
 
-# Reat netlist
-ngspyce.cmd('source lowpass.net')
+# Read netlist
+ngspyce.source('lowpass.net')
+
 # Calculate small-signal transfer function between 10kHz and 100MHz, with 5
 # points per decade
 ngspyce.cmd('ac dec 5 10k 100meg')

@@ -24,6 +24,7 @@ __all__ = [
     'decibel',
     'alter',
     'linear_sweep',
+    'source',
 ]
 
 logger = logging.getLogger(__name__)
@@ -629,3 +630,19 @@ def linear_sweep(start, stop, step):
             return np.array(ret)
         ret.append(nextval)
         nextval = nextval + step
+
+
+def source(filename):
+    """
+    Read a ngspice input file
+
+    This function is the same as the ngspice source command, so the first line
+    of the file is considered a title line, lines beginning with the character
+    ``*`` are considered comments and are ignored, etc.
+
+    Parameters
+    ----------
+    filename : str
+        A file containing a circuit netlist.
+    """
+    cmd("source '{}'".format(filename))

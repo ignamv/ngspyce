@@ -5,7 +5,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # Load netlist
-ngspyce.cmd('source quad.net')
+ngspyce.source('quad.net')
 # Simulate 10 ms
 ngspyce.cmd('tran 12n 10m 1n')
 
