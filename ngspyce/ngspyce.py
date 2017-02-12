@@ -25,6 +25,7 @@ __all__ = [
     'alter',
     'linear_sweep',
     'source',
+    'xspice_enabled'
 ]
 
 logger = logging.getLogger(__name__)
@@ -132,8 +133,11 @@ def send_data(vecvaluesall, num_structs, libngspice_id, ret):
                                   libngspice_id=libngspice_id,
                                   ret=ret))
 
-spice.ngSpice_Init(printfcn, statfcn, controlled_exit, send_data, None, None,
-                   None)
+def initialize():
+    spice.ngSpice_Init(printfcn, statfcn, controlled_exit, send_data, None, None,
+                       None)
+    # Prevent paging output of commands (hangs)
+    cmd('set nomoremode')
 
 # int  ngSpice_Command(char* command);
 spice.ngSpice_Command.argtypes = [c_char_p]
@@ -646,3 +650,12 @@ def source(filename):
         A file containing a circuit netlist.
     """
     cmd("source '{}'".format(filename))
+
+
+def xspice_enabled():
+    """
+    Return True if libngspice was compiled with XSpice support
+    """
+    return '** XSPICE extensions included' in cmd('version -f')
+
+initialize()
