@@ -1,7 +1,7 @@
 import unittest
-
-import ngspyce as ns
+import os
 from numpy import pi
+import ngspyce as ns
 
 
 class NgspiceTest(unittest.TestCase):
@@ -21,32 +21,15 @@ class NgspiceTest(unittest.TestCase):
         self.assertEqualDictOfArray(ns.vectors(), vectors)
 
 
+@unittest.skipUnless(ns.xspice_enabled(), 'No XSpice support')
 class TestPlatform(NgspiceTest):
-    # Test that spinit can be found and is loading default codemodels
-    # TODO: Should these just print warnings or actually fail the test?
-    def test_spice2poly_cm(self):
-        self.assertTrue(any([line.startswith('spice2poly') for line in
-                             ns.cmd('devhelp')[1:]]))
-
-    def test_analog_cm(self):
-        self.assertTrue(any([line.startswith('climit') for line in
-                             ns.cmd('devhelp')[1:]]))
-
-    def test_digital_cm(self):
-        self.assertTrue(any([line.startswith('adc_bridge') for line in
-                             ns.cmd('devhelp')[1:]]))
-
-    def test_table_cm(self):
-        self.assertTrue(any([line.startswith('table2d') for line in
-                             ns.cmd('devhelp')[1:]]))
-
-    def test_xtradev_cm(self):
-        self.assertTrue(any([line.startswith('aswitch') for line in
-                             ns.cmd('devhelp')[1:]]))
-
-    def test_xtraevt_cm(self):
-        self.assertTrue(any([line.startswith('d_to_real') for line in
-                             ns.cmd('devhelp')[1:]]))
+    def test_default_codemodels(self):
+        '''Test presence of one model from each default .cm library'''
+        required_models = {'spice2poly', 'sine', 'd_nor', 'aswitch',
+                           'd_to_real'}
+        existing_models = {line.partition(' ')[0]
+                           for line in ns.cmd('devhelp')[1:]}
+        self.assertEqual(required_models, required_models & existing_models)
 
 
 class TestBasicCircuits(NgspiceTest):
@@ -93,7 +76,8 @@ class TestCommands(NgspiceTest):
         self.assertRaises(ValueError, ns.cmd, 'print' + ' '*2000 + 'kelvin')
 
     def test_source(self):
-        ns.source('../examples/npn/npn.net')
+        ns.source(os.path.join(os.path.dirname(__file__),
+                               '../examples/npn/npn.net'))
         self.assertEqual(ns.model_parameters(model='QBC337AP')['bf'], 175)
 
     def test_plots(self):
