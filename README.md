@@ -30,6 +30,8 @@ ngspice](http://ngspice.sourceforge.net/download.html) and compile it like this:
     make
     sudo make install
 
+On OSX, libngspice can be installed with brew. Note that the ngspice package does not supply the required shared libraries. 
+
 On Windows, it currently assumes that `ngspice.dll` is installed in
 `C:\Spice\bin_dll` (32-bit Python) or `C:\Spice64\bin_dll` (64-bit Python).
 Go to [Ngspice Download](http://ngspice.sourceforge.net/download.html) and

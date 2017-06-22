@@ -1,6 +1,8 @@
 from ctypes import (CDLL, CFUNCTYPE, Structure, c_int, c_char_p, c_void_p,
                     c_bool, c_double, POINTER, pointer, cast, c_short,
                     py_object)
+
+from ctypes.util import find_library
 import numpy as np
 import logging
 import os
@@ -60,7 +62,7 @@ if os.name == 'nt':  # Windows
     spice = CDLL('ngspice')
     os.chdir(curr_dir_before)
 else:  # Linux, etc.
-    spice = CDLL('libngspice.so')
+    spice = CDLL(find_library('libngspice'))
 
 captured_output = []
 
