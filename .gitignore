@@ -1,4 +1,6 @@
 __pycache__/
+build/
+dist/
 *.pyc
 *.swp
 *.swo
