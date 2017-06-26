@@ -17,6 +17,7 @@ __all__ = [
     'vector',
     'try_float',
     'model_parameters',
+    'device_state',
     'alter_model',
     'ac',
     'dc',
@@ -488,6 +489,17 @@ def model_parameters(device=None, model=None):
             lines = cmd('showmod ' + device.lower())
         else:
             raise ValueError('Only specify one of device, model')
+    ret = dict(description=lines.pop(0))
+    ret.update({parts[0]: try_float(parts[1])
+                for parts in map(str.split, lines)})
+    return ret
+
+def device_state(device):
+    """
+    Return dict with device state
+    """
+    lines = cmd('show ' + device.lower())
+
     ret = dict(description=lines.pop(0))
     ret.update({parts[0]: try_float(parts[1])
                 for parts in map(str.split, lines)})
