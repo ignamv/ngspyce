@@ -226,7 +226,7 @@ def circ(netlist_lines):
         netlist_lines = netlist_lines.split('\n')
     netlist_lines = [line.encode('ascii') for line in netlist_lines]
     # First line is ignored by the engine
-    netlist_lines.insert(0, b'* First line')
+    netlist_lines.insert(0, b'* ngspyce-created netlist')
     # Add netlist end
     netlist_lines.append(b'.end')
     # Add list terminator
