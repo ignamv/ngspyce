@@ -63,7 +63,7 @@ if os.name == 'nt':  # Windows
     spice = CDLL('ngspice')
     os.chdir(curr_dir_before)
 else:  # Linux, etc.
-    spice = CDLL(find_library('libngspice'))
+    spice = CDLL(find_library('ngspice'))
 
 captured_output = []
 
