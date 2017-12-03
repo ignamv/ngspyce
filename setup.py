@@ -1,5 +1,4 @@
 from setuptools import setup, find_packages
-import sys, os
 
 version = '0.1'
 
@@ -8,7 +7,7 @@ setup(name='ngspyce',
       description="Python interface to ngspice",
       long_description="""\
 """,
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+      classifiers=[],  # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       keywords='ngspice spice geda CAD simulation',
       author='Ignacio Martinez V.',
       author_email='ignamv@gmail.com',

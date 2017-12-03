@@ -24,7 +24,7 @@ class NgspiceTest(unittest.TestCase):
 @unittest.skipUnless(ns.xspice_enabled(), 'No XSpice support')
 class TestPlatform(NgspiceTest):
     def test_default_codemodels(self):
-        '''Test presence of one model from each default .cm library'''
+        """Test presence of one model from each default .cm library"""
         required_models = {'spice2poly', 'sine', 'd_nor', 'aswitch',
                            'd_to_real'}
         existing_models = {line.partition(' ')[0]
@@ -37,21 +37,21 @@ class TestBasicCircuits(NgspiceTest):
         ns.circ('va a 0 dc 1')
         ns.operating_point()
         self.assertEqual(ns.vectors(),
-                         {'a'        : [1],
+                         {'a': [1],
                           'va#branch': [0]})
 
     def test_resistor(self):
         ns.circ(['va a 0 dc 1', 'r a 0 2'])
         ns.operating_point()
         self.assertEqual(ns.vectors(),
-                         {'a'        : [1],
+                         {'a': [1],
                           'va#branch': [-0.5]})
 
     def test_capacitor(self):
         ns.circ(['va a 0 ac 1 dc 0', 'c a 0 1'])
         ns.ac('lin', 1, 1, 1)
         self.assertVectors({'frequency': [1],
-                            'a'        : [1],
+                            'a': [1],
                             'va#branch': [-2j * pi],
                             })
 
@@ -60,7 +60,7 @@ class TestBasicCircuits(NgspiceTest):
         ns.circ(['ia a 0 ac 1 dc 0', 'l1 a 0 1'])
         ns.ac('lin', 1, 1, 1)
         self.assertVectors({'frequency': [1],
-                            'a'        : [-2j * pi],
+                            'a': [-2j * pi],
                             'l1#branch': [-1],
                             })
 
@@ -69,11 +69,11 @@ class TestCommands(NgspiceTest):
     def test_cmd(self):
         self.assertEqual(ns.cmd('print planck'),
                          ['planck = 6.626200e-34'])
-        self.assertEqual(ns.cmd('print' + ' '*200 + 'kelvin'),
+        self.assertEqual(ns.cmd('print' + ' ' * 200 + 'kelvin'),
                          ['kelvin = -2.73150e+02'])
 
         # Command too long
-        self.assertRaises(ValueError, ns.cmd, 'print' + ' '*2000 + 'kelvin')
+        self.assertRaises(ValueError, ns.cmd, 'print' + ' ' * 2000 + 'kelvin')
 
     def test_source(self):
         ns.source(os.path.join(os.path.dirname(__file__),
@@ -124,7 +124,7 @@ class TestCommands(NgspiceTest):
     def test_ac(self):
         ns.circ(['va a 0 ac 1 dc 0', 'c a 0 1'])
         results = ns.ac('lin', 1, 1, 1)
-        self.assertEqual(results.keys(),  {'a', 'va#branch', 'frequency'})
+        self.assertEqual(results.keys(), {'a', 'va#branch', 'frequency'})
 
         # Invalid mode
         self.assertRaises(ValueError, ns.ac, 'foo', 1, 2, 3)
@@ -154,12 +154,12 @@ class TestLinearSweep(unittest.TestCase):
 
     def test_linearsweep(self):
         testcases = [
-                     (0, 10, 1),
-                     (0, -10, -1),
-                     # (.3, .3, 0),
-                     (0, 10, .1),
-                     (1.23, 4.56, 0.789),
-                     ]
+            (0, 10, 1),
+            (0, -10, -1),
+            # (.3, .3, 0),
+            (0, 10, .1),
+            (1.23, 4.56, 0.789),
+        ]
         for sweep in testcases:
             with self.subTest(sweep=sweep):
                 self._test_sweep(*sweep)
