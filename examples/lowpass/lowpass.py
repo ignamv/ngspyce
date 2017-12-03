@@ -11,7 +11,7 @@ ngspyce.source('lowpass.net')
 
 # Calculate small-signal transfer function between 1 kHz and 10 MHz, with 5
 # points per decade
-ngspyce.ac(mode='dec', npoints=5, fstart=1e3, fstop=10e6)
+ngspyce.ac(mode='dec', npoints=7, fstart=1e3, fstop=10e6)
 
 # Read results
 freq = np.abs(ngspyce.vector('frequency'))

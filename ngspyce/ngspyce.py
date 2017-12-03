@@ -226,7 +226,7 @@ def circ(netlist_lines):
         netlist_lines = netlist_lines.split('\n')
     netlist_lines = [line.encode('ascii') for line in netlist_lines]
     # First line is ignored by the engine
-    netlist_lines.insert(0, b'* First line')
+    netlist_lines.insert(0, b'* ngspyce-created netlist')
     # Add netlist end
     netlist_lines.append(b'.end')
     # Add list terminator
@@ -632,7 +632,7 @@ def alter(device, **parameters):
             v = '[ ' + ' '.join(v) + ' ]'
         cmd('alter {} {} = {}'.format(device.lower(), k, v))
 
-from sys import float_info
+
 def linear_sweep(start, stop, step):
     """
     Voltages used in a dc transfer curve analysis linear sweep
@@ -644,7 +644,7 @@ def linear_sweep(start, stop, step):
     nextval = start
     while True:
         if np.sign(step) * nextval - np.sign(step) * stop >= (
-                float_info.epsilon * 1e3):
+                np.finfo(float).eps * 1e3):
             return np.array(ret)
         ret.append(nextval)
         nextval = nextval + step
