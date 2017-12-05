@@ -1,0 +1,607 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Welcome to ngspyce’s documentation! &#8212; ngspyce  documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-ngspyce-s-documentation">
+<h1>Welcome to ngspyce&#8217;s documentation!<a class="headerlink" href="#welcome-to-ngspyce-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h1>
+<p>This is a library that allows Python applications to talk to
+<a class="reference external" href="http://ngspice.sourceforge.net/">Ngspice</a>, an engine for simulating electronic
+circuits. Currently it supports sending commands to the engine and reading the
+results into numpy arrays, for plotting and analysis. Future goals include
+voltage and current sources defined by Python functions, and the possibility of
+stepping through a simulation in order to inspect results and modify the
+circuit mid-run.</p>
+</div>
+<div class="section" id="getting-libngspice">
+<h1>Getting libngspice<a class="headerlink" href="#getting-libngspice" title="Permalink to this headline">¶</a></h1>
+<p>This library requires <code class="docutils literal"><span class="pre">libngspice</span></code>.</p>
+<p>On <strong>Linux</strong>, this means you have to download the
+<a class="reference external" href="http://ngspice.sourceforge.net/download.html">source package for ngspice</a>
+and compile it like this:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="o">./</span><span class="n">configure</span> <span class="o">--</span><span class="k">with</span><span class="o">-</span><span class="n">ngshared</span>
+<span class="n">make</span>
+<span class="n">sudo</span> <span class="n">make</span> <span class="n">install</span>
+</pre></div>
+</div>
+<p>On <strong>OSX</strong>, <code class="docutils literal"><span class="pre">libngspice</span></code> can be installed with brew. Note that the ngspice
+package does not supply the required shared libraries.</p>
+<p>On <strong>Windows</strong>, it currently assumes that <cite>ngspice.dll</cite> is installed in
+<cite>C:Spicebin_dll</cite> (32-bit Python) or <cite>C:Spice64bin_dll</cite> (64-bit Python).
+Go to <a class="reference external" href="http://ngspice.sourceforge.net/download.html">Ngspice Download</a> and
+choose one of the packages (such as <cite>ngspice-26plus-scope-inpcom-6-64.7z</cite>)
+that contains <cite>ngspice.dll</cite>, and extract it to <cite>C:`.  (To support all features,
+this folder structure must also include `spinit</cite>, <cite>spice2poly.cm</cite>, etc.)</p>
+</div>
+<div class="section" id="basic-usage">
+<h1>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">ngspyce</span> <span class="k">as</span> <span class="nn">ns</span>
+</pre></div>
+</div>
+<p>Load a circuit:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">circ</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">v1 b 0 dc 3</span>
+<span class="gp">... </span><span class="s1">r1 b a 1k</span>
+<span class="gp">... </span><span class="s1">r2 a 0 2k&#39;&#39;&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Run analyses</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">operating_point</span><span class="p">()</span>
+<span class="go">{&#39;v1#branch&#39;: array([-0.001]), &#39;a&#39;: array([ 2.]), &#39;b&#39;: array([ 3.])}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;a&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">dc</span><span class="p">(</span><span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">{&#39;a&#39;: array([ 2.,  4.,  6.]), &#39;v-sweep&#39;: array([ 3.,  6.,  9.]), &#39;v1&#39;: array([3, 6, 9])}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="making-netlists">
+<h1>Making netlists<a class="headerlink" href="#making-netlists" title="Permalink to this headline">¶</a></h1>
+<p>One fast way to produce SPICE netlists is to draw the schematic with
+<a class="reference external" href="http://www.geda-project.org/">GSchem</a> and then export a netlist with</p>
+<blockquote>
+<div>gnetlist -g spice-sdb schematic.sch -o netlist.net</div></blockquote>
+</div>
+<div class="section" id="command-reference">
+<h1>Command reference<a class="headerlink" href="#command-reference" title="Permalink to this headline">¶</a></h1>
+<p>For details on simulation commands, check out the
+<a class="reference external" href="http://ngspice.sourceforge.net/docs/ngspice-manual.pdf">Ngspice manual</a>.</p>
+<div class="section" id="circuit-loading">
+<h2>Circuit loading<a class="headerlink" href="#circuit-loading" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="ngspyce.circ">
+<code class="descclassname">ngspyce.</code><code class="descname">circ</code><span class="sig-paren">(</span><em>netlist_lines</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.circ" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify a netlist</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>netlist_lines</strong> : str or list of str</p>
+<blockquote>
+<div><p>Netlist, either as a list of lines, or a
+single multi-line string.  Indentation and white
+space don&#8217;t matter. Unlike a netlist file, the
+first line doesn&#8217;t need to be a comment, and you
+don&#8217;t need to provide the <cite>.end</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int</p>
+<blockquote class="last">
+<div><p><cite>1</cite> upon error, otherwise <cite>0</cite>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Using a sequence of lines:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">circ</span><span class="p">([</span><span class="s1">&#39;va a 0 dc 1&#39;</span><span class="p">,</span> <span class="s1">&#39;r a 0 2&#39;</span><span class="p">])</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+<p>Using a single string:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">circ</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;va a 0 dc 1</span>
+<span class="gp">... </span><span class="s1">        r a 0 2&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="go">0</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="analyses">
+<h2>Analyses<a class="headerlink" href="#analyses" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="ngspyce.ac">
+<code class="descclassname">ngspyce.</code><code class="descname">ac</code><span class="sig-paren">(</span><em>mode</em>, <em>npoints</em>, <em>fstart</em>, <em>fstop</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.ac" title="Permalink to this definition">¶</a></dt>
+<dd><p>Small-signal AC analysis</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mode</strong> : {&#8216;lin&#8217;, &#8216;oct&#8217;, &#8216;dec&#8217;}</p>
+<blockquote>
+<div><p>Frequency axis spacing: linear, octave or decade</p>
+</div></blockquote>
+<p><strong>npoints</strong> : int</p>
+<blockquote>
+<div><p>If mode is <code class="docutils literal"><span class="pre">'lin'</span></code>, this is the total number of points for the sweep.
+Otherwise, this is the number of points per decade or per octave.</p>
+</div></blockquote>
+<p><strong>fstart</strong> : float</p>
+<blockquote>
+<div><p>Starting frequency</p>
+</div></blockquote>
+<p><strong>fstop</strong> : float</p>
+<blockquote>
+<div><p>Final frequency</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict from str to ndarray</p>
+<blockquote class="last">
+<div><p>Result vectors: voltages, currents and frequency (under key <code class="docutils literal"><span class="pre">'frequency'</span></code>).</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Sweep from 1 kHz to 10 MHz with 3 points per decade</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">ac</span><span class="p">(</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">,</span> <span class="mf">10e6</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">])</span>
+<span class="go">13</span>
+</pre></div>
+</div>
+<p>Sweep from 20 to 20 kHz in 21 linearly spaced points</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">ac</span><span class="p">(</span><span class="s1">&#39;lin&#39;</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mf">20e3</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">])</span>
+<span class="go">21</span>
+</pre></div>
+</div>
+<p>Plot response of low-pass filter:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ns</span><span class="o">.</span><span class="n">circ</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="s1">v1 in 0 dc 0 ac 1</span>
+<span class="s1">r1 in out 1k</span>
+<span class="s1">c1 out 0 1n&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">ns</span><span class="o">.</span><span class="n">ac</span><span class="p">(</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">1e0</span><span class="p">,</span> <span class="mf">1e9</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">semilogx</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;frequency&#39;</span><span class="p">],</span> <span class="mi">2</span><span class="o">*</span><span class="n">ns</span><span class="o">.</span><span class="n">decibel</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;out&#39;</span><span class="p">]))</span>
+</pre></div>
+</div>
+<img alt="_images/lowpass.png" src="_images/lowpass.png" />
+</dd></dl>
+
+<dl class="function">
+<dt id="ngspyce.dc">
+<code class="descclassname">ngspyce.</code><code class="descname">dc</code><span class="sig-paren">(</span><em>*sweeps</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.dc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze DC transfer function, return vectors with one axis per sweep</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sweeps:</strong></p>
+<blockquote>
+<div><p>One or more sequences of (src, start, stop, increment).
+src can be an independent voltage or current source, a resistor, or <code class="docutils literal"><span class="pre">'TEMP'</span></code>.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict from str to ndarray</p>
+<blockquote class="last">
+<div><p>Voltages and currents, reshaped so each axis corresponds to one sweep.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Sweep a voltage source</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">circ</span><span class="p">(</span><span class="s1">&#39;v1 a 0 dc 0&#39;</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">dc</span><span class="p">(</span><span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">{&#39;a&#39;: array([ 0.,  1.,  2.,  3.,  4.,  5.]),</span>
+<span class="go"> &#39;v-sweep&#39;: array([ 0.,  1.,  2.,  3.,  4.,  5.]),</span>
+<span class="go"> &#39;v1&#39;: array([0, 1, 2, 3, 4, 5]),</span>
+<span class="go"> &#39;v1#branch&#39;: array([ 0.,  0.,  0.,  0.,  0.,  0.])}</span>
+</pre></div>
+</div>
+<p>Add a secondary sweep:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">ns</span><span class="o">.</span><span class="n">circ</span><span class="p">([</span><span class="s1">&#39;v1 a 0 dc 0&#39;</span><span class="p">,</span> <span class="s1">&#39;r1 a 0 1k&#39;</span><span class="p">])</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">ns</span><span class="o">.</span><span class="n">dc</span><span class="p">(</span><span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;r1&#39;</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">,</span> <span class="mf">10e3</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="o">-</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;v1#branch&#39;</span><span class="p">]);</span>
+</pre></div>
+</div>
+<img alt="_images/secondary_sweep.png" src="_images/secondary_sweep.png" />
+</dd></dl>
+
+<dl class="function">
+<dt id="ngspyce.operating_point">
+<code class="descclassname">ngspyce.</code><code class="descname">operating_point</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.operating_point" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze DC operating point</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">Voltages and currents</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">dict[str, numpy.ndarray]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="retrieving-results">
+<h2>Retrieving results<a class="headerlink" href="#retrieving-results" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="ngspyce.vectors">
+<code class="descclassname">ngspyce.</code><code class="descname">vectors</code><span class="sig-paren">(</span><em>names=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.vectors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary with the specified vectors (defaults to all in current plot)</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>names</strong> : list of str, optional</p>
+<blockquote>
+<div><p>Names of vectors to retrieve.  If <cite>names</cite> is None, return all vectors
+in current plot</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict from str to ndarray</p>
+<blockquote class="last">
+<div><p>Dictionary of vectors.  Keys are vector names and values are Numpy
+arrays containing the data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Do an AC sweep and retrieve the frequency axis and output voltage</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ac</span><span class="p">(</span><span class="s1">&#39;dec&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mf">1e3</span><span class="p">,</span> <span class="mf">10e6</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ac_results</span> <span class="o">=</span> <span class="n">vectors</span><span class="p">([</span><span class="s1">&#39;frequency&#39;</span><span class="p">,</span> <span class="s1">&#39;vout&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="ngspyce.vector">
+<code class="descclassname">ngspyce.</code><code class="descname">vector</code><span class="sig-paren">(</span><em>name</em>, <em>plot=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a numpy.ndarray with the specified vector</p>
+<p>Uses the current plot by default.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>name</strong> : str</p>
+<blockquote>
+<div><p>Name of vector</p>
+</div></blockquote>
+<p><strong>plot</strong> : str, optional</p>
+<blockquote>
+<div><p>Which plot the vector is in. Defaults to current plot.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">ndarray</p>
+<blockquote class="last">
+<div><p>Value of the vector</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Run an analysis and retrieve a vector
+&gt;&gt;&gt; ns.circ([&#8216;v1 a 0 dc 2&#8217;, &#8216;r1 a 0 1k&#8217;]);
+&gt;&gt;&gt; ns.dc(&#8216;v1&#8217;, 0, 2, 1);
+&gt;&gt;&gt; ns.vector(&#8216;v1#branch&#8217;)
+array([ 0.   , -0.001, -0.002])</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ngspyce.plots">
+<code class="descclassname">ngspyce.</code><code class="descname">plots</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.plots" title="Permalink to this definition">¶</a></dt>
+<dd><p>List available plots (result sets)</p>
+<p>Each plot is a collection of vector results</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list[str]</p>
+<blockquote class="last">
+<div><p>List of the plot names available</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Each analysis creates a new plot</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">circ</span><span class="p">([</span><span class="s1">&#39;v1 a 0 dc 1&#39;</span><span class="p">,</span> <span class="s1">&#39;r1 a 0 1k&#39;</span><span class="p">]);</span> <span class="n">ns</span><span class="o">.</span><span class="n">plots</span><span class="p">()</span>
+<span class="go">[&#39;const&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">operating_point</span><span class="p">();</span> <span class="n">ns</span><span class="o">.</span><span class="n">plots</span><span class="p">()</span>
+<span class="go">[&#39;op1&#39;, &#39;const&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">dc</span><span class="p">(</span><span class="s1">&#39;v1&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span> <span class="n">ns</span><span class="o">.</span><span class="n">plots</span><span class="p">()</span>
+<span class="go">[&#39;dc1&#39;, &#39;op1&#39;, &#39;const&#39;]</span>
+</pre></div>
+</div>
+<p>Get lists of vectors available in different plots:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">vectors</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="s1">&#39;const&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="go">dict_keys([&#39;echarge&#39;, &#39;e&#39;, &#39;TRUE&#39;, &#39;FALSE&#39;, &#39;no&#39;, &#39;i&#39;, ... &#39;c&#39;, &#39;boltz&#39;])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">vectors</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="s1">&#39;ac1&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="go">dict_keys([&#39;V(1)&#39;, &#39;vout&#39;, &#39;v1#branch&#39;, &#39;frequency&#39;])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="ngspyce.vector_names">
+<code class="descclassname">ngspyce.</code><code class="descname">vector_names</code><span class="sig-paren">(</span><em>plot=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.vector_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>List the vectors present in the specified plot</p>
+<p>List the voltages, currents, etc present in the specified plot.
+Defaults to the last plot.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>plot</strong> : str, optional</p>
+<blockquote>
+<div><p>Plot name. Defaults to the last plot.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of str</p>
+<blockquote class="last">
+<div><p>Names of vectors in the plot</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>List built-in constants</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">vector_names</span><span class="p">(</span><span class="s1">&#39;const&#39;</span><span class="p">)</span>
+<span class="go">[&#39;planck&#39;, &#39;boltz&#39;, &#39;echarge&#39;, &#39;kelvin&#39;, &#39;i&#39;, &#39;c&#39;, &#39;e&#39;, &#39;pi&#39;, &#39;FALSE&#39;, &#39;no&#39;, &#39;TRUE&#39;, &#39;yes&#39;]</span>
+</pre></div>
+</div>
+<p>Vectors produced by last analysis</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">circ</span><span class="p">(</span><span class="s1">&#39;v1 a 0 dc 2&#39;</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">operating_point</span><span class="p">();</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">vector_names</span><span class="p">()</span>
+<span class="go">[&#39;v1#branch&#39;, &#39;a&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="circuit-information">
+<h2>Circuit information<a class="headerlink" href="#circuit-information" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="ngspyce.model_parameters">
+<code class="descclassname">ngspyce.</code><code class="descname">model_parameters</code><span class="sig-paren">(</span><em>device=None</em>, <em>model=None</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.model_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Model parameters for device or model</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>device</strong> : str, optional</p>
+<blockquote>
+<div><p>Instance name</p>
+</div></blockquote>
+<p><strong>model</strong> : str, optional</p>
+<blockquote>
+<div><p>Model card name</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict from str to float or str</p>
+<blockquote class="last">
+<div><p>Model parameters</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Parameters of a resistor&#8217;s model</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">circ</span><span class="p">(</span><span class="s1">&#39;r1 a 0 2k&#39;</span><span class="p">);</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ns</span><span class="o">.</span><span class="n">model_parameters</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="s1">&#39;r1&#39;</span><span class="p">)</span>
+<span class="go">{&#39;description&#39;: &#39;Resistor models (Simple linear resistor)&#39;, &#39;model&#39;: &#39;R&#39;,</span>
+<span class="go">&#39;rsh&#39;: 0.0, &#39;narrow&#39;: 0.0, &#39;short&#39;: 0.0, &#39;tc1&#39;: 0.0, &#39;tc2&#39;: 0.0,</span>
+<span class="go">&#39;tce&#39;: 0.0, &#39;defw&#39;: 0.0, &#39;l&#39;: 0.0, &#39;kf&#39;: 0.0, &#39;af&#39;: 0.0, &#39;r&#39;: 0.0,</span>
+<span class="go">&#39;bv_max&#39;: 0.0, &#39;lf&#39;: 0.0, &#39;wf&#39;: 0.0, &#39;ef&#39;: 0.0}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="sending-arbitrary-commands">
+<h2>Sending arbitrary commands<a class="headerlink" href="#sending-arbitrary-commands" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="ngspyce.cmd">
+<code class="descclassname">ngspyce.</code><code class="descname">cmd</code><span class="sig-paren">(</span><em>command</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.cmd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send a command to the ngspice engine</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>command</strong> : str</p>
+<blockquote>
+<div><p>An ngspice command</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of str</p>
+<blockquote class="last">
+<div><p>Lines of the captured output</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<p>Print all default variables</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cmd</span><span class="p">(</span><span class="s1">&#39;print all&#39;</span><span class="p">)</span>
+<span class="go">[&#39;false = 0.000000e+00&#39;,</span>
+<span class="go"> &#39;true = 1.000000e+00&#39;,</span>
+<span class="go"> &#39;boltz = 1.380620e-23&#39;,</span>
+<span class="go"> &#39;c = 2.997925e+08&#39;,</span>
+<span class="go"> &#39;e = 2.718282e+00&#39;,</span>
+<span class="go"> &#39;echarge = 1.602190e-19&#39;,</span>
+<span class="go"> &#39;i = 0.000000e+00,1.000000e+00&#39;,</span>
+<span class="go"> &#39;kelvin = -2.73150e+02&#39;,</span>
+<span class="go"> &#39;no = 0.000000e+00&#39;,</span>
+<span class="go"> &#39;pi = 3.141593e+00&#39;,</span>
+<span class="go"> &#39;planck = 6.626200e-34&#39;,</span>
+<span class="go"> &#39;yes = 1.000000e+00&#39;]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+<div class="section" id="utility-functions">
+<h2>Utility functions<a class="headerlink" href="#utility-functions" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="ngspyce.decibel">
+<code class="descclassname">ngspyce.</code><code class="descname">decibel</code><span class="sig-paren">(</span><em>x</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.decibel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate 10*log(abs(x))</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="ngspyce.linear_sweep">
+<code class="descclassname">ngspyce.</code><code class="descname">linear_sweep</code><span class="sig-paren">(</span><em>start</em>, <em>stop</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#ngspyce.linear_sweep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return numbers from start to stop (inclusive), separated by step.</p>
+<p>These match the values used in a dc linear sweep</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">numpy.ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></li>
+<li><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></li>
+<li><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></li>
+</ul>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to ngspyce&#8217;s documentation!</a></li>
+<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#getting-libngspice">Getting libngspice</a></li>
+<li><a class="reference internal" href="#basic-usage">Basic Usage</a></li>
+<li><a class="reference internal" href="#making-netlists">Making netlists</a></li>
+<li><a class="reference internal" href="#command-reference">Command reference</a><ul>
+<li><a class="reference internal" href="#circuit-loading">Circuit loading</a></li>
+<li><a class="reference internal" href="#analyses">Analyses</a></li>
+<li><a class="reference internal" href="#retrieving-results">Retrieving results</a></li>
+<li><a class="reference internal" href="#circuit-information">Circuit information</a></li>
+<li><a class="reference internal" href="#sending-arbitrary-commands">Sending arbitrary commands</a></li>
+<li><a class="reference internal" href="#utility-functions">Utility functions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Ignacio Martinez and collaborators.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.5.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
