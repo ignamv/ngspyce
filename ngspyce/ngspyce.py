@@ -16,11 +16,11 @@ __all__ = [
     'ac',
     'dc',
     'operating_point',
+    'linear_sweep',
     'save',
     'destroy',
     'decibel',
     'alter',
-    'linear_sweep',
     'source',
     'xspice_enabled'
 ]
@@ -47,14 +47,15 @@ def cmd(command):
 
     Returns
     -------
-    success : list of str
-        A list of lines of the captured output
+    list of str
+        Lines of the captured output
 
     Examples
     --------
+
     Print all default variables
 
-    >>> cmd('print all')
+    >>> ns.cmd('print all')
     ['false = 0.000000e+00',
      'true = 1.000000e+00',
      'boltz = 1.380620e-23',
@@ -81,32 +82,34 @@ def cmd(command):
 
 def circ(netlist_lines):
     """
-    Specify a netlist
+    Load a netlist
 
     Parameters
     ----------
-    netlist_lines : str or sequence of str
-        Lines of the netlist, either as a sequence, or a single multi-line
-        string.  Indentation and white space doesn't matter.  (Unlike a
-        netlist file, the first line doesn't need to be a comment, and you
-        don't need to provide the `.end`.)
+
+    netlist_lines : str or list of str
+        Netlist, either as a list of lines, or a
+        single multi-line string.  Indentation and white
+        space don't matter. Unlike a netlist file, the
+        first line doesn't need to be a comment, and you
+        don't need to provide the `.end`.
 
     Returns
     -------
-    success : int
-        Returns a `1` upon error, otherwise `0`.
+    int
+        `1` upon error, otherwise `0`.
 
     Examples
     --------
+
     Using a sequence of lines:
 
-    >>> circ(['va a 0 dc 1',
-    ...       'r a 0 2'])
+    >>> ns.circ(['va a 0 dc 1', 'r a 0 2'])
     0
 
     Using a single string:
 
-    >>> circ('''va a 0 dc 1
+    >>> ns.circ('''va a 0 dc 1
     ...         r a 0 2''')
     0
 
@@ -132,21 +135,26 @@ def plots():
 
     Returns
     -------
-    plots : list of str
-        List of the plot names available
+    list of str
+        List of existing plot names
 
     Examples
     --------
-    Get list of plots:
 
-    >>> plots()
-    ['ac1', 'dc1', 'const']
+    Each analysis creates a new plot
+
+    >>> ns.circ(['v1 a 0 dc 1', 'r1 a 0 1k']); ns.plots()
+    ['const']
+    >>> ns.operating_point(); ns.plots()
+    ['op1', 'const']
+    >>> ns.dc('v1', 0, 5, 1); ns.plots()
+    ['dc1', 'op1', 'const']
 
     Get lists of vectors available in different plots:
 
-    >>> vectors(plot='const').keys()
+    >>> ns.vectors(plot='const').keys()
     dict_keys(['echarge', 'e', 'TRUE', 'FALSE', 'no', 'i', ... 'c', 'boltz'])
-    >>> vectors(plot='ac1').keys()
+    >>> ns.vectors(plot='ac1').keys()
     dict_keys(['V(1)', 'vout', 'v1#branch', 'frequency'])
     """
     ret = []
@@ -161,10 +169,36 @@ def plots():
 
 def vector_names(plot=None):
     """
-    List the vectors present in the specified plot
+    Names of vectors present in the specified plot
 
-    List the voltages, currents, etc present in the specified plot.
-    Defaults to the last plot.
+    Names of the voltages, currents, etc present in the specified plot.
+    Defaults to the current plot.
+
+    Parameters
+    ----------
+    plot : str, optional
+        Plot name. Defaults to the current plot.
+
+    Returns
+    -------
+    list of str
+        Names of vectors in the plot
+
+    Examples
+    --------
+
+    List built-in constants
+
+    >>> ns.vector_names('const')
+    ['planck', 'boltz', 'echarge', 'kelvin', 'i', 'c', 'e', 'pi', 'FALSE', 'no', 'TRUE', 'yes']
+
+    Vectors produced by last analysis
+
+    >>> ns.circ('v1 a 0 dc 2');
+    >>> ns.operating_point();
+    >>> ns.vector_names()
+    ['v1#branch', 'a']
+
     """
     names = []
     if plot is None:
@@ -180,31 +214,31 @@ def vector_names(plot=None):
 
 def vectors(names=None):
     """
-    Return a dictionary with the specified vectors
+    Dictionary with the specified vectors (defaults to all in current plot)
 
     Parameters
     ----------
-    names : iterable of strings
-        Names of vectors to retrieve.  If `names` is None, return all
-        available vectors
+    names : list of str, optional
+        Names of vectors to retrieve.  If omitted, return all vectors
+        in current plot
 
     Returns
     -------
-    vectors : dict
+    dict from str to ndarray
         Dictionary of vectors.  Keys are vector names and values are Numpy
         arrays containing the data.
 
     Examples
     --------
-    Do an AC sweep and then retrieve the frequency axis and output voltage
 
-    >>> ac('dec', 3, 1e3, 10e6)
-    >>> ac_results = vectors(['frequency', 'vout'])
+    Do an AC sweep and retrieve the frequency axis and output voltage
+
+    >>> nc.ac('dec', 3, 1e3, 10e6);
+    >>> nc.ac_results = vectors(['frequency', 'vout'])
 
     """
     if names is None:
-        plot = spice.ngSpice_CurPlot()
-        names = vector_names(plot)
+        names = vector_names()
     return dict(zip(names, map(vector, names)))
 
 
@@ -213,6 +247,29 @@ def vector(name, plot=None):
     Return a numpy.ndarray with the specified vector
 
     Uses the current plot by default.
+
+    Parameters
+    ----------
+    name : str
+        Name of vector
+    plot : str, optional
+        Which plot the vector is in. Defaults to current plot.
+
+    Returns
+    -------
+    ndarray
+        Value of the vector
+
+    Examples
+    --------
+
+    Run an analysis and retrieve a vector
+
+    >>> ns.circ(['v1 a 0 dc 2', 'r1 a 0 1k']);
+    >>> ns.dc('v1', 0, 2, 1);
+    >>> ns.vector('v1#branch')
+    array([ 0.   , -0.001, -0.002])
+
     """
     if plot is not None:
         name = plot + '.' + name
@@ -253,7 +310,31 @@ def try_float(s):
 
 def model_parameters(device=None, model=None):
     """
-    Return dict with model parameters for device or model
+    Model parameters for device or model
+
+    Parameters
+    ----------
+    device : str, optional
+        Instance name
+    model : str, optional
+        Model card name
+
+    Returns
+    -------
+    dict from str to float or str
+        Model parameters
+
+    Examples
+    --------
+
+    Parameters of a resistor's model
+
+    >>> ns.circ('r1 a 0 2k');
+    >>> ns.model_parameters(device='r1')
+    {'description': 'Resistor models (Simple linear resistor)', 'model': 'R',
+    'rsh': 0.0, 'narrow': 0.0, 'short': 0.0, 'tc1': 0.0, 'tc2': 0.0,
+    'tce': 0.0, 'defw': 0.0, 'l': 0.0, 'kf': 0.0, 'af': 0.0, 'r': 0.0,
+    'bv_max': 0.0, 'lf': 0.0, 'wf': 0.0, 'ef': 0.0}
     """
     if device is None:
         if model is not None:
@@ -273,7 +354,28 @@ def model_parameters(device=None, model=None):
 
 def device_state(device):
     """
-    Return dict with device state
+    Dict with device state
+
+    Parameters
+    ----------
+    device : str
+        Instance name
+
+    Returns
+    -------
+    dict from str to float or str
+        Device description, model, operating point, etc.
+
+    Examples
+    --------
+
+    Resistor description
+
+    >>> ns.circ(['r1 a 0 4'])
+    >>> ns.device_state('r1')
+    {'description': 'Resistor: Simple linear resistor', 'device': 'r1',
+    'model': 'R', 'resistance': 4.0, 'ac': 4.0, 'dtemp': 0.0, 'bv_max': 0.0,
+    'noisy': 0.0}
     """
     lines = cmd('show ' + device.lower())
 
@@ -283,47 +385,66 @@ def device_state(device):
     return ret
 
 
-def alter_model(device, **params):
+def alter_model(model, **params):
+    """
+    Change parameters of a model card
+
+    Parameters
+    ----------
+    model : str
+        Model card name
+    """
     for k, v in params.items():
-        cmd('altermod {} {} = {:.6e}'.format(device, k, v))
+        cmd('altermod {} {} = {:.6e}'.format(model, k, v))
 
 
 def ac(mode, npoints, fstart, fstop):
     """
-    Perform small-signal AC analysis
+    Small-signal AC analysis
 
     Parameters
     ----------
-    mode : {'lin', 'dec', oct'}
-        Frequency axis spacing: linear, decade, or octave.
+    mode : {'lin', 'oct', 'dec'}
+        Frequency axis spacing: linear, octave or decade
     npoints : int
-        If mode is 'lin', this is the total number of points for the sweep.
+        If mode is ``'lin'``, this is the total number of points for the sweep.
         Otherwise, this is the number of points per decade or per octave.
-    fstart : float or str
-        Starting frequency.
-    fstop : float or str
-        Final frequency.
+    fstart : float
+        Starting frequency
+    fstop : float
+        Final frequency
 
     Returns
     -------
-    results : dict
-        Dictionary of test results.  Frequency points are in
-        ``results['frequency']``, with corresponding voltages and currents
-        under their own key names, such as ``results['vout']``
+    dict from str to ndarray
+        Result vectors: voltages, currents and frequency (under key ``'frequency'``).
 
     Examples
     --------
+
     Sweep from 1 kHz to 10 MHz with 3 points per decade
 
-    >>> results = ac('dec', 3, 1e3, 10e6)
+    >>> results = nc.ac('dec', 3, 1e3, 10e6)
     >>> len(results['frequency'])
     13
 
     Sweep from 20 to 20 kHz in 21 linearly spaced points
 
-    >>> results = ac('lin', 21, 20, 20e3)
+    >>> results = nc.ac('lin', 21, 20, 20e3)
     >>> len(results['frequency'])
     21
+
+    Bode plot of low-pass filter::
+
+        ns.circ('''
+        v1 in 0 dc 0 ac 1
+        r1 in out 1k
+        c1 out 0 1n''')
+        results = ns.ac('dec', 2, 1e0, 1e9)
+        plt.semilogx(results['frequency'], 2*ns.decibel(results['out']))
+
+    .. image:: lowpass.png
+
     """
     modes = ('dec', 'lin', 'oct')
     if mode.lower() not in modes:
@@ -345,24 +466,47 @@ def dc(*sweeps):
     """
     Analyze DC transfer function, return vectors with one axis per sweep
 
-    sweeps is one or more sequences of (src, start, stop, increment)
-    src can be an independent voltage or current source, a resistor, or "TEMP".
+    Parameters
+    ----------
+    sweeps:
+        One or two sequences of (src, start, stop, increment).
+        src can be an independent voltage or current source, a resistor, or ``'TEMP'``.
 
-    Returned vectors are reshaped so each axis corresponds to one sweep.
+    Returns
+    -------
+    dict from str to ndarray
+        Voltages and currents. If there is a secondary sweep, the ndarrays will have two axes.
 
     Examples
     --------
-    >>> dc('va', 0, 1, 1, 'vb', 0, 2, 2)
-    {'a': array([[ 0.,  0.], [ 1.,  1.]]),
-     'b': array([[ 0.,  2.], [ 0.,  2.]]), ...}
+
+    Sweep a voltage source
+
+    >>> ns.circ('v1 a 0 dc 0');
+    >>> ns.dc('v1', 0, 5, 1)
+    {'a': array([ 0.,  1.,  2.,  3.,  4.,  5.]),
+     'v-sweep': array([ 0.,  1.,  2.,  3.,  4.,  5.]),
+     'v1': array([0, 1, 2, 3, 4, 5]),
+     'v1#branch': array([ 0.,  0.,  0.,  0.,  0.,  0.])}
+
+    Add a secondary sweep::
+
+        ns.circ(['v1 a 0 dc 0', 'r1 a 0 1k'])
+        results = ns.dc('v1', 0, 3, 1, 'r1', 1e3, 10e3, 1e3)
+        plt.plot(-results['v1#branch']);
+
+    .. image:: secondary_sweep.png
+
     """
     # TODO: support more than two sweeps
+    # TODO: implement other sweeps
     cmd('dc ' + ' '.join(map(str, sweeps)))
     sweepvalues = [linear_sweep(*sweep[1:])
                    for sweep in group(sweeps, 4)]
     sweeplengths = tuple(map(len, sweepvalues))
     ret = {k: v.reshape(sweeplengths, order='F')
            for k, v in vectors().items()}
+    # Add vectors with swept sources/parameters
     for ii, (name, values) in enumerate(zip(sweeps[::4], sweepvalues)):
         shape = [length if ii == jj else 1
                  for jj, length in enumerate(sweeplengths)]
@@ -373,23 +517,44 @@ def dc(*sweeps):
 def operating_point():
     """
     Analyze DC operating point
+
+    Returns
+    -------
+    dict from str to ndarray
+        Voltages and currents
     """
     cmd('op')
     return vectors()
 
 
 def save(vector_name):
+    """
+    Save this vector in the following analyses
+
+    If this command is used, only explicitly saved vectors will be kept in next analysis.
+
+    Parameters
+    ----------
+    vector_name : str
+        Name of the vector
+    """
     cmd('save ' + vector_name)
 
 
 def destroy(plotname='all'):
     """
     Erase plot from memory
+
+    Parameters
+    ----------
+    plotname : str, optional
+        Name of a plot. If omitted, erase all plots.
     """
     cmd('destroy ' + plotname)
 
 
 def decibel(x):
+    '''Calculate 10*log(abs(x))'''
     return 10. * np.log10(np.abs(x))
 
 
@@ -397,10 +562,13 @@ def alter(device, **parameters):
     """
     Alter device parameters
 
-    Examples
-    --------
-    >>> alter('R1', resistance=200)
-    >>> alter('vin', ac=2, dc=3)
+    Parameters
+    ----------
+    device : str
+        Instance name
+
+    >>> ns.alter('R1', resistance=200)
+    >>> ns.alter('vin', ac=2, dc=3)
     """
     for k, v in parameters.items():
         if not isinstance(v, (list, tuple)):
@@ -412,7 +580,20 @@ def alter(device, **parameters):
 
 def linear_sweep(start, stop, step):
     """
-    Voltages used in a dc transfer curve analysis linear sweep
+    Numbers from start to stop (inclusive), separated by step.
+
+    These match the values used in a dc linear sweep
+
+    Returns
+    -------
+    ndarray
+
+    Examples
+    --------
+
+    >>> ns.linear_sweep(0, 100, 20)
+    array([  0,  20,  40,  60,  80, 100])
+
     """
     if (start > stop and step > 0) or (start < stop and step < 0):
         raise ValueError("Can't sweep from", start, 'to', stop, 'with step',
@@ -429,7 +610,7 @@ def linear_sweep(start, stop, step):
 
 def source(filename):
     """
-    Read a ngspice input file
+    Evaluate a ngspice input file
 
     This function is the same as the ngspice source command, so the first line
     of the file is considered a title line, lines beginning with the character
@@ -445,7 +626,11 @@ def source(filename):
 
 def xspice_enabled():
     """
-    Return True if libngspice was compiled with XSpice support
+    Was libngspice compiled with XSpice support?
+
+    Returns
+    -------
+    bool
     """
     return '** XSPICE extensions included' in cmd('version -f')
 
