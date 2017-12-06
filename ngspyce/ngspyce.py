@@ -168,8 +168,8 @@ def vector_names(plot=None):
     """
     names = []
     if plot is None:
-        plot = spice.ngSpice_CurPlot()
-    veclist = spice.ngSpice_AllVecs(plot)
+        plot = spice.ngSpice_CurPlot().decode('ascii')
+    veclist = spice.ngSpice_AllVecs(plot.encode('ascii'))
     ii = 0
     while True:
         if not veclist[ii]:
