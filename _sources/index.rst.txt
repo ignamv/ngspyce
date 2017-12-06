@@ -32,12 +32,11 @@ and compile it like this: ::
 On **OSX**, ``libngspice`` can be installed with brew. Note that the ngspice
 package does not supply the required shared libraries.
 
-On **Windows**, it currently assumes that `ngspice.dll` is installed in
-`C:\Spice\bin_dll` (32-bit Python) or `C:\Spice64\bin_dll` (64-bit Python).
+On **Windows**, ``ngspyce`` currently assumes that ``ngspice.dll`` is installed in
+``C:\Spice\bin_dll`` (32-bit Python) or ``C:\Spice64\bin_dll`` (64-bit Python).
 Go to `Ngspice Download <http://ngspice.sourceforge.net/download.html>`_ and
-choose one of the packages (such as `ngspice-26plus-scope-inpcom-6-64.7z`)
-that contains `ngspice.dll`, and extract it to `C:\`.  (To support all features,
-this folder structure must also include `spinit`, `spice2poly.cm`, etc.)
+choose one of the packages (such as ``ngspice-26plus-scope-inpcom-6-64.7z``)
+that contains ``ngspice.dll``, and extract it to ``C:\``.
 
 Basic Usage
 ===========
@@ -62,11 +61,18 @@ Run analyses
 Making netlists
 ===============
 
-One fast way to produce SPICE netlists is to draw the schematic with
+Geda
+####
+
+You can draw the schematic with
 `GSchem <http://www.geda-project.org/>`_ and then export a netlist with
 
     gnetlist -g spice-sdb schematic.sch -o netlist.net
 
+Kicad
+#####
+
+Draw the schematic with ``Eeschema`` and click the ``Export netlist`` button, targeting Spice.
 
 Command reference
 =================
@@ -74,9 +80,12 @@ Command reference
 For details on simulation commands, check out the
 `Ngspice manual <http://ngspice.sourceforge.net/docs/ngspice-manual.pdf>`_.
 
-Circuit loading
-###############
+Circuit loading and modification
+################################
 .. autofunction:: ngspyce.circ
+.. autofunction:: ngspyce.source
+.. autofunction:: ngspyce.alter_model
+.. autofunction:: ngspyce.alter
 
 Analyses
 ########
@@ -87,17 +96,24 @@ Analyses
 Retrieving results
 ##################
 .. autofunction:: ngspyce.vectors
-.. autofunction:: ngspyce.vector
+.. autofunction:: ngspyce.save
 .. autofunction:: ngspyce.plots
+.. autofunction:: ngspyce.vector
 .. autofunction:: ngspyce.vector_names
+.. autofunction:: ngspyce.destroy
 
 Circuit information
 ###################
 .. autofunction:: ngspyce.model_parameters
+.. autofunction:: ngspyce.device_state
 
 Sending arbitrary commands
 ##########################
 .. autofunction:: ngspyce.cmd
+
+Engine information
+##################
+.. autofunction:: ngspyce.xspice_enabled
 
 Utility functions
 #################
