@@ -233,6 +233,8 @@ def vector(name, plot=None):
         raise RuntimeError('No valid data in vector')
     logger.debug('Fetched vector {} type {}'.format(name, vec.v_type))
     array.setflags(write=False)
+    if name == 'frequency':
+        return array.real
     return array
 
 
