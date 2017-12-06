@@ -567,6 +567,9 @@ def alter(device, **parameters):
     device : str
         Instance name
 
+    Examples
+    --------
+
     >>> ns.alter('R1', resistance=200)
     >>> ns.alter('vin', ac=2, dc=3)
     """
