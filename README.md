@@ -23,6 +23,7 @@ Getting libngspice
 
 This library requires libngspice.
 
+#### Linux
 On Linux, this means you have to [download the source package for
 ngspice](http://ngspice.sourceforge.net/download.html) and compile it like this:
 
@@ -30,8 +31,15 @@ ngspice](http://ngspice.sourceforge.net/download.html) and compile it like this:
     make
     sudo make install
 
+It is occasionally necessary to adjust LD_LIBRARY_PATH to help ngspyce find libngspice.
+First locate your copy of libngspice.so then try updating the environment variable, with for example:
+
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+#### OSX
 On OSX, libngspice can be installed with brew. Note that the ngspice package does not supply the required shared libraries. 
 
+#### Windows
 On Windows, it currently assumes that `ngspice.dll` is installed in
 `C:\Spice\bin_dll` (32-bit Python) or `C:\Spice64\bin_dll` (64-bit Python).
 Go to [Ngspice Download](http://ngspice.sourceforge.net/download.html) and
