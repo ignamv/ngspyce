@@ -37,7 +37,11 @@ if os.name == 'nt':  # Windows
     spice = CDLL('ngspice')
     os.chdir(curr_dir_before)
 else:  # Linux, etc.
-    spice = CDLL(find_library('ngspice'))
+    try:
+        lib_location = os.environ['LIBNGSPICE']
+    except KeyError:
+        lib_location = find_library('ngspice')
+    spice = CDLL(lib_location)
 
 captured_output = []
 
