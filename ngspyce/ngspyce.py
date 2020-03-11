@@ -21,6 +21,7 @@ __all__ = [
     'destroy',
     'decibel',
     'alter',
+    'alterparams',
     'source',
     'xspice_enabled'
 ]
@@ -579,6 +580,12 @@ def alter(device, **parameters):
         else:
             v = '[ ' + ' '.join(v) + ' ]'
         cmd('alter {} {} = {}'.format(device.lower(), k, v))
+
+
+def alterparams(**kwargs):
+    for k, v in kwargs.items():
+        cmd('alterparam {} = {}'.format(k, v))
+    cmd('reset')
 
 
 def linear_sweep(start, stop, step):
